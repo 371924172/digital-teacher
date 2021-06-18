@@ -3,6 +3,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from .models import *
+from user.utils import isAdmin
 from .serializers import *
 
 
@@ -12,12 +13,17 @@ class problemView(ModelViewSet):
 
     def create(self, request):
         data = request.data
-        last = Problem.objects.last()
-        data['problem_id'] = 'P' + str((int(last.problem_id[1:]) + 1)).zfill(5)
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid()
-        serializer.save()
-        return Response(request.data)
+        count = Problem.objects.filter(name=data['name']).count()
+        if (count):
+            return Response({"status": 101, "message": "已存在同名题目，请修改题目名称"})
+        else:
+            last = Problem.objects.last()
+            data['problem_id'] = 'P' + str((int(last.problem_id[1:]) + 1)).zfill(5)
+            data['publish_status'] = 4 if isAdmin else 0
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid()
+            serializer.save()
+            return Response(request.data)
 
     @action(methods=['get'], detail=False)
     def myProblem(self, request):
@@ -25,28 +31,21 @@ class problemView(ModelViewSet):
         serializer = problemSerializer(MyProblemList, many=True)
         return Response(serializer.data)
 
-    @action(methods=['get'], detail=False)
-    def publishCheck(self):
-        # publishCheckList = Problem.objects.filter(publish_status_in=[0, 1, 2, 3])
+    @action(methods=['post'], detail=False)
+    def getByPublishStatus(self, request):
+        status = [
+            [1, 2, 3, 4],  # 上架审核
+            [5, 6, 7, 8],  # 发布审核
+            [9, 10, 11, 12]  # 删除审核
+        ]
+        publishCheckList = Problem.objects.filter(publish_status__in=status[request.data['type']])
 
         serializer = problemSerializer(publishCheckList, many=True)
+        print(serializer.data)
         return Response(serializer.data)
 
-    @action(methods=['post'], detail=False)
-    def publishAccept(self, request):
-        id = request.data['id']
-        problem = Problem.objects.get(id=id)
-        problem.publish_status = 2
-        problem.save()
-        return Response({"status": 200})
-
-    @action(methods=['post'], detail=False)
-    def publishReject(self, request):
-        id = request.data['id']
-        problem = Problem.objects.get(id=id)
-        problem.publish_status = 3
-        problem.save()
-        return Response({"status": 200})
+    def publishStatus(self, request, pk):
+        data = request.data
 
 
 class ptagView(ModelViewSet):

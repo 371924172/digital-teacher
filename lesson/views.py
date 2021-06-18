@@ -16,6 +16,10 @@ class classView(ModelViewSet):
     #         print(c.major_id.name)
     #     return Response(serializer.data)
 
+    # def create(self, request):
+    #     print(request.data)
+    #     return Response(request.data)
+
 
 class collegeView(ModelViewSet):
     queryset = College.objects.all()
