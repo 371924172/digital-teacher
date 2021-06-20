@@ -97,7 +97,7 @@ class UserView(ModelViewSet):
 
 
 class RoleView(ModelViewSet):
-    permission_classes = (isAdmin,)
+    # permission_classes = (isAdmin,)
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
 
@@ -124,6 +124,7 @@ class RoleView(ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def admin(self, request):
-        user = User.objects.raw("select *,eu.name from ego_role left join ego_user eu on ego_role.USER_ID = eu.ID")
+        user = User.objects.raw(
+            "select * from ego_user where id IN (select user_id from ego_role where name = 'admin')")
         serializer = UserSerializer(user, many=True)
         return Response(serializer.data)

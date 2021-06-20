@@ -18,7 +18,10 @@ class problemView(ModelViewSet):
             return Response({"status": 101, "message": "已存在同名题目，请修改题目名称"})
         else:
             last = Problem.objects.last()
-            data['problem_id'] = 'P' + str((int(last.problem_id[1:]) + 1)).zfill(5)
+            if last:
+                data['problem_id'] = 'P' + str((int(last.problem_id[1:]) + 1)).zfill(5)
+            else:
+                data['problem_id'] = 'P00001'
             data['publish_status'] = 4 if isAdmin else 0
             serializer = self.get_serializer(data=data)
             serializer.is_valid()
@@ -44,8 +47,23 @@ class problemView(ModelViewSet):
         print(serializer.data)
         return Response(serializer.data)
 
+    @action(methods=['put'], detail=True)
     def publishStatus(self, request, pk):
         data = request.data
+        problem = Problem.objects.get(id=pk)
+        problem.publish_status = data['publish_status']
+        problem.save()
+        serializer = problemSerializer(problem)
+        return Response(serializer.data)
+
+    @action(methods=['post'], detail=False)
+    def draftCount(self, request):
+        id = request.data['id']
+        draftcount = Problem.objects.filter(created_by=id).filter(publish_status=0).count()
+        data = {
+            "count": draftcount
+        }
+        return Response(data)
 
 
 class ptagView(ModelViewSet):
@@ -89,10 +107,11 @@ class pgroupView(ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
+    @action(methods=['get'], detail=False)
     def myPgroup(self, request):
         user = request.user
-        pgroupList = Pgroup.objects.filter(create_by=user.id)
-        serializer = pgroupSerializer(pgroupList)
+        pgroupList = Pgroup.objects.filter(created_by=user.id)
+        serializer = pgroupSerializer(pgroupList, many=True)
         return Response(serializer.data)
 
 
@@ -122,8 +141,9 @@ class propgroupView(ModelViewSet):
     def listOfId(self, request):
         data = request.data
         ProblemList = Problem.objects.raw(
-            "select * from ego_propgroup left join ego_problem on ego_propgroup.problem_id = ego_problem.id where ego_propgroup.pgroup_id = %s",
+            "select *,ego_problem.problem_id from ego_propgroup left join ego_problem on ego_propgroup.problem_id = ego_problem.id where ego_propgroup.pgroup_id = %s order by ego_problem.id",
             [data['id']])
+
         serializer = problemSerializer(ProblemList, many=True)
         return Response(serializer.data)
 
@@ -132,7 +152,7 @@ class propgroupView(ModelViewSet):
         data = request.data
         print(data)
         ProblemList = Problem.objects.raw(
-            "select * from ego_problem where id not in (select problem_id from ego_propgroup where pgroup_id = %s)",
+            "select * ,ego_problem.problem_id from ego_problem where id not in (select problem_id from ego_propgroup where pgroup_id = %s)",
             [data['id']])
         serializer = problemSerializer(ProblemList, many=True)
         return Response(serializer.data)
