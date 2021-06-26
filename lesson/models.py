@@ -115,7 +115,7 @@ class Selclass(models.Model):
 
 
 class Student(models.Model):
-    id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
+    id = models.IntegerField(db_column='ID', primary_key=True)  # Field name made lowercase.
     organization_id = models.ForeignKey("Organization", on_delete=models.CASCADE, db_column='organization_id')
     college_id = models.ForeignKey('College', on_delete=models.CASCADE, db_column='college_id')
     class_id = models.ForeignKey('Class', on_delete=models.CASCADE, db_column='class_id')

@@ -54,3 +54,7 @@ class studentView(ModelViewSet):
 class instructView(ModelViewSet):
     queryset = Instruct.objects.all()
     serializer_class = instructSerializer
+
+class teacherView(ModelViewSet):
+    queryset = Teacher.objects.all()
+    serializer_class = teacherSerializer

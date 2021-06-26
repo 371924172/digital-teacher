@@ -141,7 +141,7 @@ class selclassSerializer(serializers.ModelSerializer):
 class instructSerializer(serializers.ModelSerializer):
     teacher_id = serializers.PrimaryKeyRelatedField(many=False, queryset=Teacher.objects.all())
     class_id = serializers.PrimaryKeyRelatedField(many=False, queryset=Class.objects.all())
-    teacher_id = serializers.PrimaryKeyRelatedField(many=False, queryset=Lesson.objects.all())
+    lesson_id = serializers.PrimaryKeyRelatedField(many=False, queryset=Lesson.objects.all())
 
     def to_representation(self, instance):
         teacher = instance.teacher_id

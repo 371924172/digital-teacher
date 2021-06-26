@@ -11,4 +11,5 @@ router.register(r'organization', views.organizationView)
 router.register(r'selclass', views.selclassView)
 router.register(r'student', views.studentView)
 router.register(r'instruct', views.instructView)
+router.register(r'teacher', views.teacherView)
 urlpatterns += router.urls
